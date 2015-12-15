@@ -17,12 +17,13 @@ import json
 import psycopg2
 import time
 
-pg_con = psycopg2.connect("dbname=test user=test")
+pg_con = psycopg2.connect(host='127.0.0.1', database='test', user='test', password='test', port=5432)
 pg_cur = pg_con.cursor()
 
 
 def postgresql_create_table():
-    pg_cur.execute("CREATE TABLE test (PREFIX INTEGER PRIMARY KEY, data json);")
+    pg_cur.execute("DROP TABLE IF EXISTS test;")
+    pg_cur.execute("CREATE TABLE test (PREFIX CIDR PRIMARY KEY, data json);")
     pg_con.commit()
 
 
@@ -46,7 +47,7 @@ def postgresql_load_prefix():
     t = time.time()
     for prefix in open('rib.json').readlines():
         prefix = json.loads(prefix)
-        pg_cur.execute('INSERT INTO test (PREFIX,data) VALUES (%s,%s);', (prefix['PREFIX'], prefix))
+        pg_cur.execute('INSERT INTO test (PREFIX,data) VALUES (%s,%s);', (prefix['PREFIX'], json.dumps(prefix)))
     pg_con.commit()
     print "postgresql insert time %s" % (time.time() - t)
 
@@ -56,7 +57,6 @@ if __name__ == "__main__":
     postgresql_load_prefix()
     postgresql_stats()
     postgresql_drop_table()
-
 
 # postgresql insert time 61.1340229511
 # ** postgresql stats
